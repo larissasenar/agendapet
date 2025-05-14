@@ -41,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'O cuidado que seu pet merece, na palma da mão.',
+                    'O cuidado que seu pet merece, na palma da mão.!',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
