@@ -11,22 +11,38 @@ class AdicionarAgendamento extends StatefulWidget {
 }
 
 class _AdicionarAgendamentoState extends State<AdicionarAgendamento> {
-  final petController = TextEditingController();
   final dataController = TextEditingController();
-  String? _selectedServico; // Variável privada
+  final observacoesController = TextEditingController(); // ✅ novo campo
+  String? _selectedPet;
+  String? _selectedServico;
+
+  List<String> _pets = [];
   List<Servico> _servicos = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadServicos(); // Carregar os serviços quando a tela for carregada
+    _loadServicosEPets();
   }
 
-  // Função para carregar os serviços do banco de dados
-  Future<void> _loadServicos() async {
+  @override
+  void dispose() {
+    dataController.dispose();
+    observacoesController.dispose(); // ✅ liberar o controlador
+    super.dispose();
+  }
+
+  Future<void> _loadServicosEPets() async {
+    setState(() => _isLoading = true);
+
+    final petsData = await DatabaseHelper.instance.getPets();
     final servicosData = await DatabaseHelper.instance.getServicos();
+
     setState(() {
+      _pets = petsData.map((e) => e['nome'] as String).toList();
       _servicos = servicosData.map((e) => Servico.fromMap(e)).toList();
+      _isLoading = false;
     });
   }
 
@@ -34,137 +50,109 @@ class _AdicionarAgendamentoState extends State<AdicionarAgendamento> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Adicionar Agendamento',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Color(0xFFFB8C00),
-        iconTheme: IconThemeData(color: Colors.white),
+        title: const Text('Adicionar Agendamento'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: petController,
-              decoration: InputDecoration(
-                labelText: 'Nome do Pet',
-                labelStyle: TextStyle(color: Color(0xFFFB8C00)),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFB8C00)),
-                ),
-              ),
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 10),
-            // Dropdown para selecionar o serviço
-            _servicos.isEmpty
-                ? CircularProgressIndicator() // Mostra um carregando enquanto os dados são carregados
-                : DropdownButtonFormField<String>(
-                  value: _selectedServico, // Usando a variável privada
-                  decoration: InputDecoration(
-                    labelText: 'Serviço',
-                    labelStyle: TextStyle(color: Color(0xFFFB8C00)),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFFFB8C00)),
-                    ),
-                  ),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedServico = newValue;
-                    });
-                  },
-                  items:
-                      _servicos.map((Servico servico) {
-                        return DropdownMenuItem<String>(
-                          value:
-                              servico
-                                  .nome, // Exibe o nome do serviço no dropdown
-                          child: Text(servico.nome),
-                        );
-                      }).toList(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, selecione um serviço';
-                    }
-                    return null;
-                  },
-                ),
-            SizedBox(height: 10),
-            TextField(
-              controller: dataController,
-              decoration: InputDecoration(
-                labelText: 'Data',
-                labelStyle: TextStyle(color: Color(0xFFFB8C00)),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFFB8C00)),
-                ),
-              ),
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (petController.text.isEmpty ||
-                      _selectedServico == null ||
-                      dataController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Por favor, preencha todos os campos.'),
-                        backgroundColor: Colors.red,
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: _selectedPet,
+                      decoration: const InputDecoration(
+                        labelText: 'Nome do Pet',
                       ),
-                    );
-                    return;
-                  }
-
-                  final novo = Agendamento(
-                    petNome: petController.text,
-                    servico: _selectedServico!, // Usando a variável privada
-                    data: dataController.text,
-                  );
-                  await DatabaseHelper.instance.insertAgendamento(novo);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Agendamento salvo com sucesso!'),
-                      backgroundColor: Colors.green,
+                      items:
+                          _pets
+                              .map(
+                                (nomePet) => DropdownMenuItem(
+                                  value: nomePet,
+                                  child: Text(nomePet),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedPet = value);
+                      },
                     ),
-                  );
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: _selectedServico,
+                      decoration: const InputDecoration(labelText: 'Serviço'),
+                      items:
+                          _servicos
+                              .map(
+                                (servico) => DropdownMenuItem(
+                                  value: servico.nome,
+                                  child: Text(servico.nome),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedServico = value);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: dataController,
+                      decoration: const InputDecoration(labelText: 'Data'),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: observacoesController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: 'Observações (opcional)',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (_selectedPet == null ||
+                              _selectedServico == null ||
+                              dataController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Por favor, preencha todos os campos.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
 
-                  Navigator.pop(context);
-                },
-                label: Text(
-                  'Salvar',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFFB8C00),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+                          final novo = Agendamento(
+                            petNome: _selectedPet!,
+                            servico: _selectedServico!,
+                            data: dataController.text,
+                            observacoes: observacoesController.text.trim(),
+                          );
+
+                          await DatabaseHelper.instance.insertAgendamento(novo);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Agendamento salvo com sucesso!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Salvar'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

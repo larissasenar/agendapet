@@ -1,6 +1,7 @@
 import 'package:agendapet/db/database_helper.dart';
 import 'package:agendapet/models/agendamento.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class EditarAgendamento extends StatefulWidget {
   final Agendamento agendamento;
@@ -11,27 +12,70 @@ class EditarAgendamento extends StatefulWidget {
 }
 
 class _EditarAgendamentoState extends State<EditarAgendamento> {
-  late TextEditingController petController;
-  late TextEditingController servicoController;
   late TextEditingController dataController;
+  late TextEditingController observacoesController;
+  late DateTime selectedDate;
 
   @override
   void initState() {
     super.initState();
-    petController = TextEditingController(text: widget.agendamento.petNome);
-    servicoController = TextEditingController(text: widget.agendamento.servico);
-    dataController = TextEditingController(text: widget.agendamento.data);
+
+    try {
+      selectedDate = DateFormat('yyyy-MM-dd').parse(widget.agendamento.data);
+    } catch (e) {
+      try {
+        selectedDate = DateFormat('dd/MM/yyyy').parse(widget.agendamento.data);
+      } catch (e) {
+        selectedDate = DateTime.now();
+        debugPrint('Erro ao converter data: ${widget.agendamento.data}');
+      }
+    }
+
+    dataController = TextEditingController(
+      text: DateFormat('dd/MM/yyyy').format(selectedDate),
+    );
+
+    observacoesController = TextEditingController(
+      text: widget.agendamento.observacoes,
+    );
+  }
+
+  @override
+  void dispose() {
+    dataController.dispose();
+    observacoesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+      locale: const Locale('pt', 'BR'),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        dataController.text = DateFormat('dd/MM/yyyy').format(selectedDate);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Editar Agendamento',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFFFB8C00),
+        backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
@@ -39,77 +83,76 @@ class _EditarAgendamentoState extends State<EditarAgendamento> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Nome do Pet
-            TextField(
-              controller: petController,
-              decoration: InputDecoration(
-                labelText: 'Nome do Pet',
-                prefixIcon: const Icon(Icons.pets, color: Color(0xFFFB8C00)),
-                border: const OutlineInputBorder(),
-              ),
-              style: const TextStyle(color: Colors.black),
+            Text(
+              'Pet: ${widget.agendamento.petNome}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
-            // Serviço
-            TextField(
-              controller: servicoController,
-              decoration: InputDecoration(
-                labelText: 'Serviço',
-                prefixIcon: const Icon(
-                  Icons.miscellaneous_services,
-                  color: Color(0xFFFB8C00),
-                ),
-                border: const OutlineInputBorder(),
-              ),
-              style: const TextStyle(color: Colors.black),
+            Text(
+              'Serviço: ${widget.agendamento.servico}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-
-            // Data
+            const SizedBox(height: 32),
             TextField(
               controller: dataController,
               decoration: InputDecoration(
                 labelText: 'Data',
-                prefixIcon: const Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFFFB8C00),
-                ),
+                prefixIcon: Icon(Icons.calendar_today, color: primaryColor),
                 border: const OutlineInputBorder(),
               ),
-              style: const TextStyle(color: Colors.black),
+              readOnly: true,
+              onTap: _pickDate,
             ),
-            const SizedBox(height: 30),
-
-            // Botão Salvar
-            ElevatedButton.icon(
-              icon: const Icon(Icons.save, color: Colors.white),
-              label: const Text(
-                'Salvar Alterações',
-                style: TextStyle(color: Colors.white),
+            const SizedBox(height: 20),
+            TextField(
+              controller: observacoesController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: 'Observações',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.notes, color: primaryColor),
+                border: const OutlineInputBorder(),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFB8C00),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onPressed: () async {
-                final atualizado = Agendamento(
-                  id: widget.agendamento.id,
-                  petNome: petController.text,
-                  servico: servicoController.text,
-                  data: dataController.text,
-                );
+            ),
 
-                await DatabaseHelper.instance.updateAgendamento(atualizado);
-                Navigator.pop(context, true);
-              },
+            const SizedBox(height: 40),
+
+            // Botão salvar
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: const Text(
+                  'Salvar Alterações',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () async {
+                  final atualizado = Agendamento(
+                    id: widget.agendamento.id,
+                    petNome: widget.agendamento.petNome,
+                    servico: widget.agendamento.servico,
+                    data: DateFormat('yyyy-MM-dd').format(selectedDate),
+                    observacoes: observacoesController.text.trim(),
+                  );
+
+                  await DatabaseHelper.instance.updateAgendamento(atualizado);
+                  Navigator.pop(context, true);
+                },
+              ),
             ),
           ],
         ),

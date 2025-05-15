@@ -17,39 +17,48 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
     await db.execute('''
-    CREATE TABLE usuarios (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      senha TEXT NOT NULL
-    )
-  ''');
+      CREATE TABLE usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        senha TEXT NOT NULL
+      )
+    ''');
 
     await db.execute('''
-    CREATE TABLE agendamentos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      petNome TEXT NOT NULL,
-      servico TEXT NOT NULL,
-      data TEXT NOT NULL
-    )
-  ''');
+      CREATE TABLE agendamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        petNome TEXT NOT NULL,
+        servico TEXT NOT NULL,
+        data TEXT NOT NULL,
+        observacoes TEXT
+      )
+    ''');
 
     await db.execute('''
-    CREATE TABLE servicos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      preco TEXT NOT NULL
-    )
-  ''');
+      CREATE TABLE servicos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        preco TEXT NOT NULL
+      )
+    ''');
+
+    // ✅ TABELA DE PETS
+    await db.execute('''
+      CREATE TABLE pets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        especie TEXT NOT NULL
+      )
+    ''');
   }
 
-  // MÉTODOS DE USUÁRIO
+  // ------------------------ MÉTODOS DE USUÁRIO ------------------------
   Future<bool> emailJaCadastrado(String email) async {
     final db = await instance.database;
     final result = await db.query(
@@ -92,7 +101,7 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first : null;
   }
 
-  // MÉTODOS DE AGENDAMENTO
+  // ---------------------- MÉTODOS DE AGENDAMENTO ----------------------
   Future<int> insertAgendamento(Agendamento agendamento) async {
     final db = await instance.database;
     return await db.insert('agendamentos', agendamento.toMap());
@@ -119,7 +128,18 @@ class DatabaseHelper {
     return await db.delete('agendamentos', where: 'id = ?', whereArgs: [id]);
   }
 
-  // MÉTODOS DE SERVIÇOS
+  // ------------------------- MÉTODOS DE PETS --------------------------
+  Future<int> insertPet(Map<String, dynamic> pet) async {
+    final db = await instance.database;
+    return await db.insert('pets', pet);
+  }
+
+  Future<List<Map<String, dynamic>>> getPets() async {
+    final db = await instance.database;
+    return await db.query('pets');
+  }
+
+  // ------------------------ MÉTODOS DE SERVIÇOS -----------------------
   Future<int> insertServico(String nome, String preco) async {
     final db = await instance.database;
     return await db.insert('servicos', {'nome': nome, 'preco': preco});

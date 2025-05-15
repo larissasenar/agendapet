@@ -9,6 +9,11 @@ class DetalhesAgendamento extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final onSurfaceColor = theme.colorScheme.onSurface;
+    final errorColor = theme.colorScheme.error;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -19,74 +24,66 @@ class DetalhesAgendamento extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFFFB8C00),
+        backgroundColor: primaryColor,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Informações do agendamento
-            Row(
-              children: [
-                const Icon(Icons.pets, color: Color(0xFFFB8C00), size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  'Pet: ${agendamento.petNome}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            _infoRow(
+              Icons.pets,
+              'Pet: ${agendamento.petNome}',
+              primaryColor,
+              onSurfaceColor,
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(
-                  Icons.miscellaneous_services,
-                  color: Color(0xFFFB8C00),
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Serviço: ${agendamento.servico}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            _infoRow(
+              Icons.miscellaneous_services,
+              'Serviço: ${agendamento.servico}',
+              primaryColor,
+              onSurfaceColor,
             ),
             const SizedBox(height: 10),
+            _infoRow(
+              Icons.calendar_today,
+              'Data: ${agendamento.data}',
+              primaryColor,
+              onSurfaceColor,
+            ),
+            const SizedBox(height: 20),
+
+            // Observações (se houver)
             Row(
               children: [
-                const Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFFFB8C00),
-                  size: 28,
-                ),
+                Icon(Icons.notes, color: primaryColor, size: 28),
                 const SizedBox(width: 12),
                 Text(
-                  'Data: ${agendamento.data}',
-                  style: const TextStyle(
+                  'Observações:',
+                  style: TextStyle(
                     fontSize: 20,
-                    color: Colors.black,
+                    color: onSurfaceColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 30),
-            // Botões de ação
+            const SizedBox(height: 8),
+            Text(
+              agendamento.observacoes.trim().isNotEmpty == true
+                  ? agendamento.observacoes
+                  : 'Nenhuma',
+              style: const TextStyle(fontSize: 16),
+            ),
+
+            const SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFB8C00),
+                    backgroundColor: primaryColor,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
                       vertical: 12,
@@ -118,7 +115,7 @@ class DetalhesAgendamento extends StatelessWidget {
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
+                    backgroundColor: errorColor,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
                       vertical: 12,
@@ -150,9 +147,9 @@ class DetalhesAgendamento extends StatelessWidget {
                                 onPressed: () => Navigator.pop(context, false),
                               ),
                               TextButton(
-                                child: const Text(
+                                child: Text(
                                   'Excluir',
-                                  style: TextStyle(color: Colors.red),
+                                  style: TextStyle(color: errorColor),
                                 ),
                                 onPressed: () => Navigator.pop(context, true),
                               ),
@@ -164,7 +161,7 @@ class DetalhesAgendamento extends StatelessWidget {
                       await DatabaseHelper.instance.deleteAgendamento(
                         agendamento.id!,
                       );
-                      Navigator.pop(context);
+                      Navigator.pop(context, true);
                     }
                   },
                 ),
@@ -173,6 +170,30 @@ class DetalhesAgendamento extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _infoRow(
+    IconData icon,
+    String text,
+    Color iconColor,
+    Color textColor,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 28),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 20,
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

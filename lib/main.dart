@@ -6,7 +6,7 @@ import 'package:agendapet/pages/cadastro/cadastro_page.dart';
 import 'package:agendapet/pages/login/login_page.dart';
 import 'package:agendapet/auth_choice_page.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart'; // Para a função join
+import 'package:path/path.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
