@@ -1,4 +1,5 @@
 import 'package:agendapet/db/database_helper.dart';
+import 'package:agendapet/pages/vacina/carteira_vacinacao_page.dart';
 import 'package:agendapet/widgets/botao_laranja.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +12,9 @@ class CadastroPet extends StatefulWidget {
 
 class _CadastroPetState extends State<CadastroPet> {
   final TextEditingController _nomeController = TextEditingController();
-  final TextEditingController _especieController = TextEditingController();
+  final TextEditingController _racaController = TextEditingController();
+  final TextEditingController _idadeController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
   int? _petEditandoId;
 
   List<Map<String, dynamic>> _listaPets = [];
@@ -31,20 +34,26 @@ class _CadastroPetState extends State<CadastroPet> {
 
   Future<void> _salvarOuAtualizarPet() async {
     final nome = _nomeController.text.trim();
-    final especie = _especieController.text.trim();
+    final raca = _racaController.text.trim();
+    final idade = _idadeController.text.trim();
+    final descricao = _descricaoController.text.trim();
 
-    if (nome.isEmpty || especie.isEmpty) return;
+    if (nome.isEmpty || raca.isEmpty || idade.isEmpty || descricao.isEmpty) {
+      return;
+    }
 
     if (_petEditandoId == null) {
       await DatabaseHelper.instance.insertPet({
         'nome': nome,
-        'especie': especie,
+        'raca': raca,
+        'idade': idade,
+        'descricao': descricao,
       });
     } else {
       await DatabaseHelper.instance.database.then((db) {
         db.update(
           'pets',
-          {'nome': nome, 'especie': especie},
+          {'nome': nome, 'raca': raca, 'idade': idade, 'descricao': descricao},
           where: 'id = ?',
           whereArgs: [_petEditandoId],
         );
@@ -52,7 +61,7 @@ class _CadastroPetState extends State<CadastroPet> {
     }
 
     _nomeController.clear();
-    _especieController.clear();
+    _racaController.clear();
     _petEditandoId = null;
     await _carregarPets();
   }
@@ -61,7 +70,9 @@ class _CadastroPetState extends State<CadastroPet> {
     setState(() {
       _petEditandoId = pet['id'];
       _nomeController.text = pet['nome'];
-      _especieController.text = pet['especie'];
+      _racaController.text = pet['raca'];
+      _idadeController.text = pet['idade'];
+      _descricaoController.text = pet['descricao'];
     });
   }
 
@@ -89,10 +100,26 @@ class _CadastroPetState extends State<CadastroPet> {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: _especieController,
+              controller: _racaController,
               decoration: const InputDecoration(
-                labelText: 'Espécie',
-                hintText: 'Digite a espécie do pet',
+                labelText: 'Raça',
+                hintText: 'Digite a Raça do pet',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _idadeController,
+              decoration: const InputDecoration(
+                labelText: 'Idade',
+                hintText: 'Digite a idade do pet',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descricaoController,
+              decoration: const InputDecoration(
+                labelText: 'Descrição',
+                hintText: 'Digite uma breve descrição do pet',
               ),
             ),
             const SizedBox(height: 16),
@@ -112,10 +139,23 @@ class _CadastroPetState extends State<CadastroPet> {
                   final pet = _listaPets[index];
                   return ListTile(
                     title: Text(pet['nome']),
-                    subtitle: Text('Espécie: ${pet['especie']}'),
+                    subtitle: Text('Raça: ${pet['raca']}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                          icon: const Icon(Icons.vaccines, color: Colors.green),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        CarteiraVacinacaoPage(petId: pet['id']),
+                              ),
+                            );
+                          },
+                        ),
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () => _editarPet(pet),

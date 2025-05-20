@@ -1,6 +1,8 @@
 import 'package:agendapet/pages/agendamentos/adicionar_agendamento.dart';
 import 'package:agendapet/pages/agendamentos/lista_agendamentos.dart';
+import 'package:agendapet/pages/perfil/editar_perfil_page.dart';
 import 'package:agendapet/pages/pet/cadastro_pet_page.dart';
+import 'package:agendapet/pages/pet/selecionar_pet_page.dart';
 import 'package:agendapet/pages/servicos/cadastro_servico_page.dart';
 import 'package:flutter/material.dart';
 
@@ -53,7 +55,7 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
 
-            // ✅ Grid unificado com todos os cards
+            // Grid de opções com todos os cards
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -61,12 +63,12 @@ class HomePage extends StatelessWidget {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                _buildOptionCard(
-                  context,
-                  'Meus Pets',
-                  Icons.pets,
-                  () => CadastroPet(),
-                ),
+                // _buildOptionCard(
+                //   context,
+                //   'Perfil',
+                //   Icons.person,
+                //   () => EditarPerfilPage(usuarioId: 1),
+                // ),
                 _buildOptionCard(
                   context,
                   'Novo Agendamento',
@@ -81,15 +83,27 @@ class HomePage extends StatelessWidget {
                 ),
                 _buildOptionCard(
                   context,
-                  'Histórico',
-                  Icons.history,
-                  () => ListaAgendamentos(),
+                  'Meus Pets',
+                  Icons.pets,
+                  () => CadastroPet(),
                 ),
                 _buildOptionCard(
                   context,
                   'Serviço',
                   Icons.local_offer,
                   () => CadastroServicoPage(),
+                ),
+                _buildOptionCard(
+                  context,
+                  'Histórico',
+                  Icons.history,
+                  () => ListaAgendamentos(),
+                ),
+                _buildOptionCard(
+                  context,
+                  'Carteira de Vacinação',
+                  Icons.vaccines,
+                  () => const SelecionarPetPage(),
                 ),
               ],
             ),
@@ -118,12 +132,26 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
+          _buildDrawerItem(Icons.person, 'Perfil', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => EditarPerfilPage(usuarioId: 1)),
+            );
+          }),
           _buildDrawerItem(Icons.pets, 'Meus Pets', () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => CadastroPet()),
             );
           }),
+          const Divider(),
+          _buildDrawerItem(Icons.vaccines, 'Carteira de Vacinação', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SelecionarPetPage()),
+            );
+          }),
+
           const Divider(),
           _buildDrawerItem(Icons.local_offer, 'Serviços', () {
             Navigator.push(

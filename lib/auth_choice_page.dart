@@ -29,7 +29,6 @@ class AuthChoicePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Logo e nome do aplicativo
             Column(
               children: [
                 Icon(Icons.pets, size: 80, color: Color(0xFFFB8C00)),
@@ -50,7 +49,7 @@ class AuthChoicePage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFB8C00),
+                color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),

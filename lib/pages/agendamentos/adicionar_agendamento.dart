@@ -12,7 +12,7 @@ class AdicionarAgendamento extends StatefulWidget {
 
 class _AdicionarAgendamentoState extends State<AdicionarAgendamento> {
   final dataController = TextEditingController();
-  final observacoesController = TextEditingController(); // ✅ novo campo
+  final observacoesController = TextEditingController();
   String? _selectedPet;
   String? _selectedServico;
 
@@ -29,7 +29,7 @@ class _AdicionarAgendamentoState extends State<AdicionarAgendamento> {
   @override
   void dispose() {
     dataController.dispose();
-    observacoesController.dispose(); // ✅ liberar o controlador
+    observacoesController.dispose();
     super.dispose();
   }
 

@@ -1,3 +1,5 @@
+import 'package:agendapet/models/usuario.dart';
+import 'package:agendapet/models/vacina.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/agendamento.dart';
@@ -48,14 +50,25 @@ class DatabaseHelper {
       )
     ''');
 
-    // ✅ TABELA DE PETS
     await db.execute('''
       CREATE TABLE pets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
-        especie TEXT NOT NULL
+        raca TEXT NOT NULL,
+        idade TEXT NOT NULL,
+        descricao TEXT
       )
     ''');
+
+    await db.execute('''
+  CREATE TABLE vacinas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    petId INTEGER NOT NULL,
+    nome TEXT NOT NULL,
+    dataAplicacao TEXT NOT NULL,
+    aplicada INTEGER NOT NULL
+  )
+''');
   }
 
   // ------------------------ MÉTODOS DE USUÁRIO ------------------------
@@ -101,6 +114,27 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first : null;
   }
 
+  Future<void> atualizarUsuario(Usuario usuario) async {
+    final db = await database;
+    await db.update(
+      'usuarios',
+      usuario.toMap(),
+      where: 'id = ?',
+      whereArgs: [usuario.id],
+    );
+  }
+
+  Future<Usuario> getUsuarioPorId(int id) async {
+    final db = await database;
+    final maps = await db.query('usuarios', where: 'id = ?', whereArgs: [id]);
+
+    if (maps.isNotEmpty) {
+      return Usuario.fromMap(maps.first);
+    } else {
+      throw Exception('Usuário não encontrado');
+    }
+  }
+
   // ---------------------- MÉTODOS DE AGENDAMENTO ----------------------
   Future<int> insertAgendamento(Agendamento agendamento) async {
     final db = await instance.database;
@@ -136,7 +170,7 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getPets() async {
     final db = await instance.database;
-    return await db.query('pets');
+    return await db.query('pets', orderBy: 'nome ASC');
   }
 
   // ------------------------ MÉTODOS DE SERVIÇOS -----------------------
@@ -148,5 +182,41 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getServicos() async {
     final db = await instance.database;
     return await db.query('servicos');
+  }
+
+  // ------------------------ MÉTODOS DE VACINAS -----------------------
+
+  // Inserir vacina
+  Future<int> insertVacina(Vacina vacina) async {
+    final db = await instance.database;
+    return await db.insert('vacinas', vacina.toMap());
+  }
+
+  // Buscar vacinas por pet
+  Future<List<Vacina>> getVacinasPorPet(int petId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'vacinas',
+      where: 'petId = ?',
+      whereArgs: [petId],
+    );
+    return result.map((map) => Vacina.fromMap(map)).toList();
+  }
+
+  // Atualizar vacina
+  Future<int> updateVacina(Vacina vacina) async {
+    final db = await instance.database;
+    return await db.update(
+      'vacinas',
+      vacina.toMap(),
+      where: 'id = ?',
+      whereArgs: [vacina.id],
+    );
+  }
+
+  // Deletar vacina
+  Future<int> deleteVacina(int id) async {
+    final db = await instance.database;
+    return await db.delete('vacinas', where: 'id = ?', whereArgs: [id]);
   }
 }
