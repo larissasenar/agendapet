@@ -18,6 +18,11 @@ dependencies:
   path_provider: ^2.1.1
   intl: ^0.18.1
   shared_preferences: ^2.0.15
+  flutter_launcher_icons: ^0.13.1
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/icon.png"
 
 dev_dependencies:
   flutter_test:
